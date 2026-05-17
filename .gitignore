@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Backups
+*_backup.js
+*_backup.html
+runs_backup_*.json
+app_full_backup.js
+app_visual_backup.js
+index_full_backup.html
+index_visual_backup.html
+runs_full.json
+runs_new.json
+runs_small.json
+
+# Temporary/Result files
+api-result.txt
+api-test-result.txt
+reset-marker.txt
+checkpoint.json
+
+# OS files
+.DS_Store
+Thumbs.db

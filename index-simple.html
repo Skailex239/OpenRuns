@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- GitHub Pages v4 -->
+<title>OpenFront SpeedRun Leaderboard - v3 CLEAN</title>
+<style>
+body { background: #0a0a0f; color: #f0f0f5; font-family: system-ui, sans-serif; margin: 0; padding: 40px 20px; }
+.container { max-width: 1200px; margin: 0 auto; }
+header { text-align: center; margin-bottom: 40px; }
+h1 { font-size: 42px; margin-bottom: 10px; }
+h1 span { color: #4b7fff; }
+.subtitle { color: #8a8a9a; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+.stat-card { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; text-align: center; }
+.stat-value { font-size: 32px; font-weight: 700; color: #6b9fff; }
+.stat-label { font-size: 12px; color: #8a8a9a; text-transform: uppercase; margin-top: 6px; }
+.main-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+.sidebar { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
+.sidebar-header { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); font-weight: 600; font-size: 14px; color: #8a8a9a; text-transform: uppercase; }
+.map-search { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.map-search input { width: 100%; background: #12121a; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; color: #f0f0f5; font-size: 14px; outline: none; }
+.map-list { max-height: 400px; overflow-y: auto; }
+.map-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.map-item:hover, .map-item.active { background: #22222e; }
+.map-item.active { border-left: 3px solid #4b7fff; padding-left: 13px; }
+.map-name { font-weight: 500; }
+.map-count { font-family: monospace; font-size: 12px; color: #5a5a6a; background: #12121a; padding: 2px 8px; border-radius: 12px; }
+.content { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
+.content-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.content-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.content-meta { font-size: 13px; color: #8a8a9a; }
+.leaderboard { min-height: 300px; }
+.run-row { display: grid; grid-template-columns: 60px 1fr 100px 100px; align-items: center; padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.run-row:hover { background: rgba(255,255,255,0.02); }
+.run-rank { font-family: monospace; font-weight: 700; font-size: 16px; color: #5a5a6a; }
+.run-rank.gold { color: #f0c060; }
+.run-rank.silver { color: #a0b0c4; }
+.run-rank.bronze { color: #c08840; }
+.run-player { font-weight: 500; font-size: 15px; }
+.run-time { font-family: monospace; font-weight: 600; font-size: 15px; color: #6b9fff; text-align: right; }
+.run-date { font-family: monospace; font-size: 12px; color: #5a5a6a; text-align: right; }
+.empty-state { padding: 60px 40px; text-align: center; color: #8a8a9a; }
+.empty-state h3 { font-size: 18px; color: #f0f0f5; margin-bottom: 8px; }
+.loading { padding: 40px; text-align: center; color: #8a8a9a; }
+.last-update { text-align: center; padding: 20px; color: #5a5a6a; font-size: 13px; margin-top: 20px; }
+@media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>OpenFront <span>SpeedRun</span></h1>
+    <p class="subtitle">Leaderboard FFA - Toutes difficultés, 10+ joueurs</p>
+  </header>
+  
+  <div class="stats">
+    <div class="stat-card"><div class="stat-value" id="stat-runs">—</div><div class="stat-label">Runs total</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-maps">—</div><div class="stat-label">Cartes</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-players">—</div><div class="stat-label">Joueurs</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-best">—</div><div class="stat-label">Meilleur temps</div></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="sidebar">
+      <div class="sidebar-header">Cartes</div>
+      <div class="map-search"><input type="text" id="map-search" placeholder="Rechercher..." oninput="filterMaps()"></div>
+      <div class="map-list" id="map-list"><div class="loading">Chargement...</div></div>
+    </div>
+    <div class="content">
+      <div class="content-header"><div class="content-title" id="content-title">Sélectionnez une carte</div><div class="content-meta" id="content-meta">—</div></div>
+      <div class="leaderboard" id="leaderboard">
+        <div class="empty-state"><h3>🎮 Bienvenue</h3><p>Cliquez sur une carte pour voir le classement</p></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="last-update" id="last-update">En attente de données...</div>
+</div>
+
+<script>
+let allRuns = [], allMaps = [], activeMap = null;
+function formatTime(s) { const m = Math.floor(s/60); const sec = s%60; return m+"m"+String(sec).padStart(2,"0")+"s"; }
+function formatDate(iso) { const d = new Date(iso); return d.toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit"}); }
+async function loadData() {
+  try {
+    const r = await fetch("runs.json");
+    if (!r.ok) throw new Error("Failed");
+    allRuns = await r.json();
+    processData();
+    renderMaps();
+    updateStats();
+    updateLastUpdate();
+  } catch(e) {
+    document.getElementById("map-list").innerHTML = '<div class="empty-state"><p>Erreur de chargement</p></div>';
+  }
+}
+function processData() {
+  const ms = {}, ps = {};
+  allRuns.forEach(r => {
+    if (!ms[r.map]) ms[r.map] = {map: r.map, total: 0, best: Infinity, runs: []};
+    ms[r.map].total++; ms[r.map].runs.push(r); if (r.duration_s < ms[r.map].best) ms[r.map].best = r.duration_s;
+    if (!ps[r.player]) ps[r.player] = {player: r.player, wins: 0, maps: new Set()};
+    ps[r.player].wins++; ps[r.player].maps.add(r.map);
+  });
+  allMaps = Object.values(ms).sort((a,b) => a.map.localeCompare(b.map));
+  allMaps.forEach(m => m.runs.sort((a,b) => a.duration_s - b.duration_s));
+  window.playerRankings = Object.values(ps).map(p => ({...p, mapCount: p.maps.size})).sort((a,b) => b.wins - a.wins);
+}
+function updateStats() {
+  document.getElementById("stat-runs").textContent = allRuns.length.toLocaleString("fr");
+  document.getElementById("stat-maps").textContent = allMaps.length;
+  document.getElementById("stat-players").textContent = window.playerRankings?.length || 0;
+  const bt = allMaps.length > 0 ? Math.min(...allMaps.map(m => m.best)) : 0;
+  document.getElementById("stat-best").textContent = bt > 0 ? formatTime(bt) : "—";
+}
+function updateLastUpdate() {
+  if (allRuns.length > 0) {
+    const lr = allRuns.reduce((l, r) => new Date(r.timestamp) > new Date(l.timestamp) ? r : l, allRuns[0]);
+    document.getElementById("last-update").textContent = "Dernière mise à jour: " + new Date(lr.timestamp).toLocaleString("fr-FR");
+  }
+}
+function renderMaps() {
+  const c = document.getElementById("map-list");
+  const q = document.getElementById("map-search").value.toLowerCase();
+  const f = q ? allMaps.filter(m => m.map.toLowerCase().includes(q)) : allMaps;
+  if (!f.length) { c.innerHTML = '<div class="empty-state"><p>Aucune carte</p></div>'; return; }
+  c.innerHTML = f.map(m => '<div class="map-item ' + (activeMap===m.map?"active":"") + '" onclick="selectMap(\'' + m.map.replace(/'/g, "\\'") + '\')"><span class="map-name">' + m.map + '</span><span class="map-count">' + m.total + '</span></div>').join("");
+}
+function filterMaps() { renderMaps(); }
+function selectMap(name) {
+  activeMap = name; renderMaps();
+  const d = allMaps.find(m => m.map === name); if (!d) return;
+  document.getElementById("content-title").textContent = name;
+  document.getElementById("content-meta").textContent = d.total + " runs · Meilleur: " + formatTime(d.best);
+  const medals = ["🥇","🥈","🥉"];
+  document.getElementById("leaderboard").innerHTML = d.runs.slice(0,50).map((r,i) => {
+    const rc = i===0?"gold":i===1?"silver":i===2?"bronze":"";
+    return `<div class="run-row"><div class="run-rank ${rc}">${i+1}</div><div class="run-player">${i<3?medals[i]+" ":""}${r.player}</div><div class="run-time">${formatTime(r.duration_s)}</div><div class="run-date">${formatDate(r.timestamp)}</div></div>`;
+  }).join("");
+}
+loadData();
+</script>
+</body>
+</html>
