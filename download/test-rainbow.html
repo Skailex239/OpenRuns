@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Rainbow Animation — OpenRuns</title>
+<style>
+body {
+  background: #08080d;
+  color: #e8e8f0;
+  font-family: 'Inter', sans-serif;
+  padding: 40px;
+}
+
+h1 { margin-bottom: 30px; color: #5b8aff; }
+
+.test-section {
+  background: #141420;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.test-section h2 {
+  font-size: 13px;
+  color: #44445a;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+}
+
+/* ═══ VIP — Rouge/Noir cyclique ═══ */
+@keyframes vipColor {
+  0%, 100% { color: #ff1744; }
+  20% { color: #d50000; }
+  40% { color: #8b0000; }
+  60% { color: #1a1a2e; }
+  80% { color: #8b0000; }
+}
+
+.player-vip {
+  color: #ff1744 !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  animation: vipColor 2s linear infinite !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+/* ═══ FLAME — Orange/Jaune/Rouge cyclique ═══ */
+@keyframes flameColor {
+  0%, 100% { color: #ff6d00; }
+  16% { color: #ffab00; }
+  33% { color: #ffd600; }
+  50% { color: #ff8c00; }
+  66% { color: #e74c3c; }
+  83% { color: #ff4500; }
+}
+
+.player-flame {
+  color: #ff6d00 !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  animation: flameColor 2s linear infinite !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+/* ═══ RAINBOW — Arc-en-ciel animé (dégradé qui glisse) ═══ */
+@keyframes animationRGB {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.player-rainbow {
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000) !important;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+  animation: animationRGB 3s linear infinite !important;
+}
+
+/* Profile hero variant */
+.pf-name.player-rainbow {
+  font-weight: 900 !important;
+  font-size: 30px !important;
+  background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000) !important;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+  animation: animationRGB 3s linear infinite !important;
+}
+
+/* Leaderboard row */
+.run-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 24px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.run-rank {
+  font-family: monospace;
+  font-weight: 700;
+  color: #44445a;
+  width: 44px;
+}
+
+.run-player {
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Global leaderboard variant */
+.global-player {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.global-player.player-rainbow {
+  font-weight: 900 !important;
+  font-size: 15px !important;
+  background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000) !important;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+  animation: animationRGB 3s linear infinite !important;
+}
+
+/* Reference from user's example */
+.texte-rgb {
+  font-size: 45px;
+  font-family: sans-serif;
+  font-weight: bold;
+  background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: animationRGBRef 3s linear infinite;
+}
+
+@keyframes animationRGBRef {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+</style>
+</head>
+<body>
+
+<h1>🌈 Test Animation Rainbow — OpenRuns</h1>
+
+<div class="test-section">
+  <h2>Référence (ton exemple original)</h2>
+  <h1 class="texte-rgb">MON TEXTE RGB DYNAMIQUE</h1>
+</div>
+
+<div class="test-section">
+  <h2>Player Rainbow — .player-rainbow (leaderboard row)</h2>
+  <div class="run-row">
+    <span class="run-rank">1</span>
+    <span class="run-player player-rainbow">Zwiper</span>
+  </div>
+  <div class="run-row">
+    <span class="run-rank">2</span>
+    <span class="run-player">JoueurNormal</span>
+  </div>
+  <div class="run-row">
+    <span class="run-rank">3</span>
+    <span class="run-player player-vip">Skailex</span>
+  </div>
+  <div class="run-row">
+    <span class="run-rank">4</span>
+    <span class="run-player player-flame">FlamePlayer</span>
+  </div>
+</div>
+
+<div class="test-section">
+  <h2>Player Rainbow — .pf-name.player-rainbow (profile hero)</h2>
+  <h1 class="pf-name player-rainbow">Zwiper</h1>
+</div>
+
+<div class="test-section">
+  <h2>Player Rainbow — .global-player.player-rainbow (global leaderboard)</h2>
+  <div><span class="global-player player-rainbow">Zwiper</span> — 1500 pts</div>
+</div>
+
+<div class="test-section">
+  <h2>Comparaison : VIP vs FLAME vs RAINBOW</h2>
+  <div style="display:flex;gap:24px;flex-wrap:wrap">
+    <div><span class="run-player player-vip">VIP Player</span></div>
+    <div><span class="run-player player-flame">Flame Player</span></div>
+    <div><span class="run-player player-rainbow">Rainbow Player</span></div>
+  </div>
+</div>
+
+</body>
+</html>
