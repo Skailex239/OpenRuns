@@ -1,25 +1,24 @@
 ---
 Task ID: 1
 Agent: Main Agent
-Task: Fix "déjà utilisé" bug + add local test codes + verify casier system + verify leaderboard skins
+Task: Fix code redemption "already used" bug + Firebase infinite loop + local backup resilience
 
 Work Log:
-- Read profile.js, generate-code.js, app.js, styles.css, profile.css, profile.html completely
-- Analyzed the "already used" bug: redeemCode() checks `snap.docs.find(d => d.data().used !== true)` which correctly identifies used codes, but the Firestore codes were likely created with `used: true` or already redeemed
-- Added 13 LOCAL_TEST_CODES (OR-VIP01 to OR-CHRM1) that bypass Firestore for testing
-- Added localStorage tracking for used local codes (getUsedLocalCodes/markLocalCodeUsed/isLocalCodeUsed)
-- Added resetLocalTestCodes() window function for debugging
-- Enhanced Firestore code check to also handle `used === "true"` (string) edge case
-- Added detailed console logging for Firestore code debugging (shows doc id, used value and type)
-- Added visual test codes hint in profile.html (clickable codes that auto-fill the input)
-- Verified casier system: ownedTypes array accumulates, activeType switches via selectCosmetic()
-- Verified all 13 cosmetic types have CSS in styles.css (3 contexts: standalone, run-row, global-player)
-- Verified app.js loadVipPlayers() reads activeType from public-rewards and maps to vipPlayers
-- Pushed all changes to GitHub (2 commits)
+- Read profile.js (1037 lines) and generate-code.js to understand the full redemption flow
+- Identified 3 critical bugs:
+  1. Firebase infinite loop: onSnapshot → refreshProfile() → write Firestore → onSnapshot → infinite loop → resource-exhausted
+  2. Local codes "already used": isLocalCodeUsed() blocked codes even when cosmetic wasn't actually saved to Firestore
+  3. No persistence fallback: when Firestore fails, ownedTypes is lost on page refresh
+- Fixed Bug 1: Changed onSnapshot handler to only re-render (not call refreshProfile), added session hash check to prevent unnecessary writes, added _isRefreshFromSnapshot flag
+- Fixed Bug 2: Removed isLocalCodeUsed() as primary gate, use ownedTypes.includes(type) as only check, moved markLocalCodeUsed() to after processing
+- Fixed Bug 3: Added saveOwnedTypesLocal()/loadOwnedTypesLocal() for localStorage backup, syncLocalCodeState() to liberate desynced codes
+- Fixed Bug 4 (found during testing): When Firestore succeeds after previous failures, it was overwriting in-memory ownedTypes with incomplete Firestore data. Added merge logic (Set-based) to combine Firestore + in-memory types before writing back
+- Fixed Bug 5 (found during testing): loadUserReward() only loaded local backup when Firestore was empty. Changed to ALWAYS merge local backup and auto-resync Firestore when backup has more data
+- Created comprehensive test suite (test_code_redemption.js) - 42/42 tests pass
+- Created E2E test suite (test_e2e_redemption.js) - 32/32 tests pass (7 scenarios including the exact bug scenario from user console logs)
+- Pushed fix to GitHub (2 commits)
 
 Stage Summary:
-- Local test codes work independently of Firestore - user can test full flow
-- Debugging console logs added to diagnose Firestore "already used" issue
-- Casier system verified and working (cosmetics accumulate, can switch between them)
-- All 13 cosmetic types have complete CSS for leaderboard display
-- Files changed: profile.js, profile.html
+- All 3+2 bugs fixed and verified with automated tests
+- Profile.js pushed to GitHub main branch
+- Test files saved to /home/z/my-project/download/
