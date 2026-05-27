@@ -400,6 +400,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── CYBERPUNK ── */
 .rgb-cyberpunk{
+  display:inline-block !important;
   font-family:'Orbitron',sans-serif !important;
   background:linear-gradient(90deg,#ff00ff,#00ffff,#ff00ff) !important;
   background-size:200% auto !important;
@@ -413,6 +414,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── SUNSET ── */
 .rgb-sunset{
+  display:inline-block !important;
   font-family:'Cinzel',serif !important;
   background:linear-gradient(90deg,#ff4500,#ff8c00,#ffd700,#ff6347) !important;
   background-size:200% auto !important;
@@ -425,6 +427,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── AURORE ── */
 .rgb-aurore{
+  display:inline-block !important;
   font-family:'Montserrat',sans-serif !important;
   background:linear-gradient(90deg,#00ff87,#60efff,#0061ff,#60efff,#00ff87) !important;
   background-size:200% auto !important;
@@ -437,6 +440,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── PASTEL ── */
 .rgb-pastel{
+  display:inline-block !important;
   font-family:'Creepster',cursive !important;
   background:linear-gradient(90deg,#ff9a9e,#fecfef,#a18cd1,#fbc2eb,#ff9a9e) !important;
   background-size:200% auto !important;
@@ -449,6 +453,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── GOLD ── */
 .rgb-gold{
+  display:inline-block !important;
   font-family:'Cinzel',serif !important;
   background:linear-gradient(90deg,#ffd700,#ffec8b,#daa520,#ffec8b,#ffd700) !important;
   background-size:200% auto !important;
@@ -462,6 +467,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── VOLCANO ── */
 .rgb-volcano{
+  display:inline-block !important;
   font-family:'Rubik Glitch',cursive !important;
   background:linear-gradient(90deg,#ff0000,#ff4500,#ff8c00,#ff4500,#ff0000) !important;
   background-size:200% auto !important;
@@ -474,6 +480,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── OCEAN ── */
 .rgb-ocean{
+  display:inline-block !important;
   font-family:'Rubik Mono One',sans-serif !important;
   background:linear-gradient(90deg,#0077b6,#00b4d8,#90e0ef,#00b4d8,#0077b6) !important;
   background-size:200% auto !important;
@@ -486,6 +493,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── MIAMI ── */
 .rgb-miami{
+  display:inline-block !important;
   font-family:'Permanent Marker',cursive !important;
   background:linear-gradient(90deg,#ff6ec7,#7b68ee,#ff6ec7) !important;
   background-size:200% auto !important;
@@ -498,6 +506,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── TOXIC ── */
 .rgb-toxic{
+  display:inline-block !important;
   font-family:'Speedy',cursive !important;
   background:linear-gradient(90deg,#39ff14,#7fff00,#adff2f,#7fff00,#39ff14) !important;
   background-size:200% auto !important;
@@ -511,6 +520,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 
 /* ── CHROMA ── */
 .rgb-chroma{
+  display:inline-block !important;
   font-family:'Montserrat',sans-serif !important;
   background:linear-gradient(90deg,#ff0000,#ff8800,#ffff00,#00ff00,#00aaff,#8800ff,#ff0088,#ff0000) !important;
   background-size:200% auto !important;
