@@ -500,11 +500,45 @@ function processData(){
   
   // Construire un index inversif : pour chaque alias connu, retrouver le playerId
   // Cela permet de fusionner "[LBU] Skailex" et "Skailex" même sans playerId sur la run
-  // ⚠️ Uniquement pour les joueurs NON connectés (le joueur connecté utilise playerGameIds)
   const nameToPlayerId = {};
   for (const [pid, data] of Object.entries(aliasMap)) {
     (data.aliases || []).forEach(alias => { nameToPlayerId[alias] = pid; });
     if (data.name) nameToPlayerId[data.name] = pid;
+  }
+
+  // ── FIX: Inject logged-in user's aliases into aliasMap for DETERMINISTIC leaderboard ──
+  // This ensures ALL viewers (including non-logged-in friends) see the same merged entries.
+  // Previously, isMyFFAWin() merged runs only for the logged-in user, causing rank discrepancies.
+  if (currentUser) {
+    const virtualPid = '__connected_user__' + currentUser.uid;
+    // Collect all known aliases for the logged-in user
+    const allMyAliases = new Set([currentUser.name, ...playerAliases]);
+
+    // Pre-scan runs to discover additional aliases/playerIds that belong to this user
+    // (runs matched by playerGameIds may have player names or playerIds not in playerAliases)
+    allRuns.forEach(r => {
+      if (playerGameIds.has(r.id)) {
+        const session = playerSessionMap.get(r.id);
+        if (session && session.hasWon === false) return; // skip non-wins
+        if (r.player) allMyAliases.add(r.player);
+      }
+    });
+
+    // Create or update the virtual aliasMap entry
+    aliasMap[virtualPid] = { name: currentUser.name, aliases: [...allMyAliases] };
+    // Map all aliases in the nameToPlayerId index
+    allMyAliases.forEach(alias => { nameToPlayerId[alias] = virtualPid; });
+
+    // Also map client IDs that may appear as run.playerId
+    playerClientIds.forEach(cid => {
+      if (cid && !aliasMap[cid]) {
+        aliasMap[cid] = { name: currentUser.name, aliases: [] };
+      } else if (cid && aliasMap[cid] && aliasMap[cid].name !== currentUser.name) {
+        // Override existing entry — verified API data takes precedence over heuristic aliasMap
+        aliasMap[cid] = { name: currentUser.name, aliases: aliasMap[cid].aliases || [] };
+      }
+      if (cid) nameToPlayerId[cid] = cid;
+    });
   }
 
   // Vérifie si un run appartient au joueur connecté ET que c'est bien une victoire FFA
@@ -521,30 +555,28 @@ function processData(){
   }
 
   // Fonction pour obtenir le nom canonique d'un joueur
-  // ── PRIORITÉ DE MATCHING (du plus fiable au moins fiable) ──
+  // ── PRIORITÉ DE MATCHING : aliasMap is the SINGLE SOURCE OF TRUTH ──
+  // The aliasMap is enriched above with the logged-in user's verified aliases,
+  // so it produces DETERMINISTIC results regardless of who is viewing the leaderboard.
+  // isMyFFAWin() is ONLY used for the _isMe visual flag, NOT for name resolution.
   function getCanonicalName(run) {
-    // 1. isMyFFAWin : gameIds vérifiés via l'API + victoire confirmée
-    //    → match exact sur run.id + hasWon=true, AUCUN faux positif
-    //    C'est la SEULE source de vérité pour le joueur connecté
-    if (isMyFFAWin(run)) {
-      return currentUser.name;
-    }
-
-    // 2. aliasMap : fusion heuristique par nom de base (sans tags [XXX])
-    //    Uniquement pour les joueurs NON connectés (pas de vérification API possible)
-    //    ⚠️ On n'utilise PAS playerAliases/connectedUserAliases car les pseudos
-    //    ne sont PAS uniques (ex: "Anon" = 125 joueurs différents) → faux positifs massifs
+    // 1. aliasMap : fusion par playerId ou par nom (index inversé nameToPlayerId)
+    //    C'est la source unique de vérité — enrichie avec les aliases du joueur connecté
     let pid = run.playerId;
     if (!pid) pid = nameToPlayerId[run.player];
     if (pid && aliasMap[pid]) return aliasMap[pid].name;
 
-    return run.player; // fallback : pseudo brut
+    // 2. Fallback : pseudo brut
+    return run.player;
   }
 
   allRuns.forEach(r=>{
     // Fusion globale : utilise getCanonicalName() qui fusionne tous les pseudos par playerId
     const playerName = getCanonicalName(r);
-    const isConnectedUserRun = isMyFFAWin(r);
+    // _isMe: the run belongs to the logged-in user.
+    // Since aliasMap now resolves the user's aliases to currentUser.name,
+    // we check the resolved name. We also keep isMyFFAWin() for API-verified runs.
+    const isConnectedUserRun = currentUser && playerName === currentUser.name;
 
     if(!ms[r.map])ms[r.map]={map:r.map,total:0,best:Infinity,runs:[],king:null};
     ms[r.map].total++;

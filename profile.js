@@ -87,7 +87,39 @@ async function loadRunsData() {
 
 function buildLeaderboard() {
   playerStats = {};
+
+  // Invalidate cache so aliasMap enrichment is picked up
+  _nameToPlayerIdCache = null;
   const nameToPlayerId = buildNameToPlayerId();
+
+  // ── FIX: Inject logged-in user's aliases into aliasMap for DETERMINISTIC leaderboard ──
+  // This ensures the leaderboard is computed the same way regardless of who views it.
+  if (currentUser) {
+    const virtualPid = '__connected_user__' + currentUser.uid;
+    const allMyAliases = new Set([currentUser.name, ...playerAliases]);
+
+    // Pre-scan runs to discover additional aliases that belong to this user
+    allRuns.forEach(r => {
+      if (playerGameIds.has(r.id)) {
+        const session = playerSessionMap.get(r.id);
+        if (session && session.hasWon === false) return;
+        if (r.player) allMyAliases.add(r.player);
+      }
+    });
+
+    aliasMap[virtualPid] = { name: currentUser.name, aliases: [...allMyAliases] };
+    allMyAliases.forEach(alias => { nameToPlayerId[alias] = virtualPid; });
+
+    // Also map client IDs that may appear as run.playerId
+    playerClientIds.forEach(cid => {
+      if (cid && !aliasMap[cid]) {
+        aliasMap[cid] = { name: currentUser.name, aliases: [] };
+      } else if (cid && aliasMap[cid] && aliasMap[cid].name !== currentUser.name) {
+        aliasMap[cid] = { name: currentUser.name, aliases: aliasMap[cid].aliases || [] };
+      }
+      if (cid) nameToPlayerId[cid] = cid;
+    });
+  }
 
   allRuns.forEach((run) => {
     const name = getCanonicalPlayerName(run, nameToPlayerId);
@@ -116,9 +148,8 @@ function isMyFFAWin(run) {
 }
 
 function getCanonicalPlayerName(run, nameToPlayerIdOverride) {
-  if (isMyFFAWin(run)) {
-    return currentUser.name;
-  }
+  // aliasMap is the SINGLE SOURCE OF TRUTH — enriched with logged-in user's aliases
+  // isMyFFAWin() is NOT used for name resolution to ensure deterministic leaderboard.
   let pid = run.playerId;
   if (!pid) {
     const n2p = nameToPlayerIdOverride || buildNameToPlayerId();
@@ -188,11 +219,24 @@ function renderStatsRow(sessions) {
   const maps = new Set(sessions.map((s) => s.map).filter(Boolean));
 
   // Rang sur le leaderboard OpenRuns (FFA uniquement)
+  // FIX: Search using ALL known aliases, not just currentUser.name.
+  // The leaderboard may use a different canonical name than currentUser.name
+  // if the aliasMap maps to a different display name.
   let rank = 0;
   if (currentUser) {
-    const myName = currentUser.name;
+    // Collect all names that could represent this user in the leaderboard
+    const searchNames = new Set([currentUser.name, ...playerAliases]);
+    // Also check the aliasMap for the canonical name that might appear
+    for (const [pid, data] of Object.entries(aliasMap)) {
+      if (data.name && (
+        data.name === currentUser.name ||
+        (data.aliases || []).some(a => a === currentUser.name || playerAliases.has(a))
+      )) {
+        searchNames.add(data.name);
+      }
+    }
     for (let i = 0; i < globalLeaderboard.length; i++) {
-      if (globalLeaderboard[i].player === myName) {
+      if (searchNames.has(globalLeaderboard[i].player)) {
         rank = i + 1;
         break;
       }
