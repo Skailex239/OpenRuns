@@ -198,39 +198,9 @@ async function fetchPlayerClientIds(publicId, cachedSessions) {
 }
 
 /**
- * Charge les joueurs VIP depuis Firestore (collection public-rewards)
- * Ces données sont publiques et servent à afficher le style VIP sur le leaderboard
+ * Skin DB supprimée — les cosmétiques ne sont plus gérés via Firestore.
+ * vipPlayers reste disponible pour un éventuel futur système.
  */
-async function loadVipPlayers() {
-  try {
-    // Listener temps réel sur public-rewards pour que les toggles cosmétiques
-    // se reflètent instantanément sur le leaderboard de tout le monde
-    onSnapshot(collection(db, "public-rewards"), (snap) => {
-      vipPlayers = new Map();
-      snap.forEach((docSnap) => {
-        const data = docSnap.data();
-        // Nouveau format: activeType (cosmétique sélectionné)
-        // Ancien format: type (rétrocompatibilité)
-        const rewardType = data.activeType || data.type || null;
-        // Seulement les joueurs dont le cosmétique est activé et ont un type actif
-        if (data.username && rewardType && data.activated !== false) {
-          vipPlayers.set(data.username, rewardType);
-        }
-      });
-      // Re-render si on a déjà des données
-      if (allRuns.length > 0) {
-        processData();
-        renderAll();
-      }
-    }, (error) => {
-      console.warn("[app] Firestore VIP listener error (non-critique):", error.message);
-      vipPlayers = new Map();
-    });
-  } catch (e) {
-    console.warn("[app] Erreur chargement VIP:", e);
-    vipPlayers = new Map();
-  }
-}
 
 function showProfileModal() {
   document.getElementById('profile-modal').classList.add('active');
@@ -385,6 +355,9 @@ function redirectToProfileIfRequested() {
 
 let refreshInterval=null,prevRunCount=0,totalRunsCount=0;
 let _lastETag=null,_processDataCache=null;
+const SYNC_INTERVAL=180000; // 3 minutes
+let syncCountdown=180; // secondes restantes
+let syncCountdownTimer=null;
 
 function showProgressBar(){const b=document.getElementById('loading-bar');if(b){b.style.opacity='1';b.style.width='0%'}}
 function hideProgressBar(){const b=document.getElementById('loading-bar');if(b){b.style.width='100%';setTimeout(()=>{b.style.opacity='0'},400)}}
@@ -463,11 +436,12 @@ async function loadData(){
     }
 
     if(refreshInterval) clearInterval(refreshInterval);
-    refreshInterval=setInterval(autoRefresh, 60000);
+    refreshInterval=setInterval(autoRefresh, SYNC_INTERVAL);
+    startSyncCountdown();
     hideProgressBar();
     const elapsed=((performance.now()-t0)/1000).toFixed(1);
     console.log(`[OpenRuns] ✅ Chargé en ${elapsed}s — ${allRuns.length} runs, ${allMaps.length} maps`);
-    console.log(`[OpenRuns] 🔄 Auto-sync ACTIF — rafraîchissement toutes les 60s`);
+    console.log(`[OpenRuns] 🔄 Auto-sync ACTIF — rafraîchissement toutes les 3 min`);
     console.timeEnd('loadData');
   }catch(e){
     console.error("Erreur critique chargement:", e);
@@ -554,7 +528,51 @@ async function autoRefresh(){
   }catch(e){
     console.error("[OpenRuns] ❌ Erreur auto-refresh:", e);
   }
+  // Toujours relancer le countdown même en cas d'erreur
+  startSyncCountdown();
 }
+
+/* ====== SYNC COUNTDOWN ====== */
+function startSyncCountdown(){
+  if(syncCountdownTimer) clearInterval(syncCountdownTimer);
+  syncCountdown = SYNC_INTERVAL / 1000; // 180 secondes
+  updateSyncCountdownUI();
+  syncCountdownTimer = setInterval(() => {
+    syncCountdown--;
+    if(syncCountdown <= 0){
+      clearInterval(syncCountdownTimer);
+      syncCountdownTimer = null;
+    }
+    updateSyncCountdownUI();
+  }, 1000);
+}
+
+function updateSyncCountdownUI(){
+  const el = document.getElementById('sync-countdown');
+  if(!el) return;
+  if(syncCountdown <= 0){
+    el.textContent = '🔄 Sync...';
+    el.style.color = 'var(--accent)';
+    return;
+  }
+  const min = Math.floor(syncCountdown / 60);
+  const sec = String(syncCountdown % 60).padStart(2, '0');
+  el.textContent = `🔄 ${min}:${sec}`;
+  // Couleur progressive : vert → jaune → rouge
+  const pct = syncCountdown / (SYNC_INTERVAL / 1000);
+  if(pct > 0.5) el.style.color = 'var(--green, #3dd68c)';
+  else if(pct > 0.15) el.style.color = '#f0c040';
+  else el.style.color = '#ef4444';
+}
+
+// Re-sync immédiat quand l'onglet redevient visible
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && allRuns.length > 0){
+    console.log('[OpenRuns] 📡 Onglet actif — sync immédiate');
+    autoRefresh();
+  }
+});
+
 function processData(){
   // Normaliser les noms de cartes avant le traitement
   allRuns.forEach(r => {
@@ -768,7 +786,7 @@ function updateLastUpdate(){
   if(allRuns.length){
     const lr=allRuns.reduce((l,r)=>new Date(r.timestamp)>new Date(l.timestamp)?r:l,allRuns[0]);
     const formattedTime = new Date(lr.timestamp).toLocaleString(localeStr);
-    document.getElementById("last-update").innerHTML = t("ui.last_update", { time: formattedTime }) + '<span class="refresh-badge" id="refresh-badge" style="display:none">LIVE</span>';
+    document.getElementById("last-update").innerHTML = t("ui.last_update", { time: formattedTime }) + ' <span id="sync-countdown" style="margin-left:8px;font-weight:600;font-size:12px"></span><span class="refresh-badge" id="refresh-badge" style="display:none">LIVE</span>';
   }
 
   if (gameCommit) {
@@ -1101,7 +1119,6 @@ const mapParam=urlParams.get('map');
 const tabParam=urlParams.get('tab');
 redirectToProfileIfRequested();
 loadData().then(()=>{
-  loadVipPlayers(); // Charger les joueurs VIP en parallèle
   if(mapParam)selectMap(mapParam);
   if (tabParam === 'profile') {
     window.location.replace('profile.html');
