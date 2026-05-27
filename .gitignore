@@ -1,0 +1,13 @@
+node_modules/
+.vite/
+.env
+dist/
+*.log
+
+# Données générées localement (ne pas versionner)
+runs_backup_[1-9].json
+runs_backup_[1-9].json.gz
+runs_full.json
+runs_new.json
+runs_small.json
+# runs_backup.json + runs_backup.json.gz sont versionnés (backup complet à jour)

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenFront SpeedRun — Leaderboard FFA</title>
+<meta name="description" content="Classement des parties FFA les plus rapides sur OpenFront.io, par carte et par joueur.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Creepster&family=Montserrat:wght@900&family=Orbitron:wght@900&family=Permanent+Marker&family=Rubik+Glitch&family=Rubik+Mono+One&family=Speedy&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="animations.css">
+<!-- Google AdSense Core Script -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2991878097014222" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="container">
+  <!-- Auth -->
+  <div class="auth-zone" id="auth-zone">
+    <!-- Logged out view -->
+    <button class="login-btn" onclick="toggleAuthModal()" id="login-btn-main">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Connexion</span>
+    </button>
+    
+    <!-- Logged in view (hidden by default) -->
+    <div class="user-container" id="user-container" style="display: none;">
+      <div class="user-badge" id="user-badge-btn" onclick="toggleUserDropdown(event)">
+        <span class="user-name" id="user-display-name">—</span>
+        <svg class="chevron-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="user-dropdown-menu" id="user-dropdown-menu">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar" id="dropdown-avatar"></div>
+          <div class="dropdown-user-info">
+            <div class="dropdown-username" id="dropdown-username-display">—</div>
+            <div class="dropdown-publicid" id="dropdown-publicid-display">—</div>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" onclick="goToProfilePage(event)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span data-i18n="profile.my_profile">Mon profil</span>
+        </button>
+        <button class="dropdown-item logout" onclick="handleLogout(event)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span data-i18n="profile.logout">Se déconnecter</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="nav">
+    <div>
+      <div class="site-logo" id="site-logo">
+        <img src="logo.png" alt="OpenRuns Logo" class="site-logo-img" id="site-logo-img">
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-top:2px" data-i18n="header.subtitle">Leaderboard FFA · 10+ joueurs · 400 bots · Standard</div>
+    </div>
+    <div class="header-right" style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+      <div id="game-version" class="game-version" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></div>
+      <div id="last-update" class="last-update" style="margin:0;padding:0;font-size:12px"></div>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="hero-stats">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-runs">—</div>
+      <div class="stat-label" data-i18n="stats.runs">Runs total</div>
+      <div class="stat-icon">🏆</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-maps">—</div>
+      <div class="stat-label" data-i18n="stats.maps">Cartes</div>
+      <div class="stat-icon">🗺️</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-players">—</div>
+      <div class="stat-label" data-i18n="stats.players">Joueurs</div>
+      <div class="stat-icon">👥</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-best">—</div>
+      <div class="stat-label" data-i18n="stats.best">Meilleur temps</div>
+      <div class="stat-icon">⚡</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('maps',this)" id="tab-btn-maps" data-i18n="nav.maps">🗺️ Cartes</button>
+    <button class="tab-btn" onclick="switchTab('global',this)" id="tab-btn-global" data-i18n="nav.global">🌍 Classement</button>
+    <button class="tab-btn" onclick="switchTab('stats',this)" id="tab-btn-stats" data-i18n="nav.stats">📊 Stats</button>
+  </div>
+
+  <!-- TAB: Maps -->
+  <div class="tab-content active" id="tab-maps">
+    <div class="search-bar">
+      <input type="text" id="player-search" class="search-input" placeholder="🔍 Rechercher un joueur..." oninput="searchPlayer()" data-i18n="search.player">
+    </div>
+    <div id="search-results"></div>
+    <div class="main-grid">
+      <div class="sidebar">
+        <div class="sidebar-head">
+          <span data-i18n="maps.title">Cartes</span>
+          <span id="map-count-badge" style="font-family:var(--mono);font-size:11px;background:var(--bg2);padding:2px 8px;border-radius:10px">—</span>
+        </div>
+        <div class="map-search-wrap">
+          <input type="text" id="map-search" placeholder="Rechercher une carte..." oninput="filterMaps()" data-i18n="maps.search">
+        </div>
+        <div class="map-list" id="map-list">
+          <div class="loading" data-i18n="ui.loading">Chargement...</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-header">
+          <div class="content-header-info">
+            <div class="content-title" id="content-title" data-i18n="maps.select">Sélectionnez une carte</div>
+            <div class="content-meta" id="content-meta">—</div>
+          </div>
+          <button class="share-btn" id="share-btn" onclick="shareMap()" style="display:none">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span data-i18n="btn.share">Partager</span>
+          </button>
+        </div>
+        <div class="leaderboard" id="leaderboard">
+          <div class="empty-state">
+            <h3 data-i18n="ui.welcome">Bienvenue 👋</h3>
+            <p data-i18n="ui.select_map">Sélectionnez une carte dans la liste pour voir le classement des runs les plus rapides.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Horizontal Ad Slot -->
+    <div class="ad-container horizontal-ad">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-2991878097014222"
+           data-ad-slot="9876543210"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
+    <div class="feed-section">
+      <div class="feed-card">
+        <div class="feed-header" data-i18n="feed.header">⚡ Dernières victoires</div>
+        <div id="feed-list"><div class="loading">Chargement...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Global -->
+  <div class="tab-content" id="tab-global">
+    <div class="hof-cards" id="hof-list"></div>
+    <div class="feed-card" style="margin-bottom:20px">
+      <div class="feed-header" data-i18n="global.header">🌍 Classement mondial — 1er = 3pts · 2e = 2pts · 3e = 1pt</div>
+      <div id="global-list"><div class="loading">Chargement...</div></div>
+    </div>
+    <div class="feed-card">
+      <div class="feed-header" data-i18n="compare.header">⚔️ Comparer deux joueurs</div>
+      <div style="padding:16px 20px">
+        <div class="cmp-row">
+          <div class="cmp-input">
+            <input type="text" id="cmp1" placeholder="Joueur 1..." oninput="searchCompare('cmp1')">
+            <div class="cmp-results" id="cmp1-results"></div>
+          </div>
+          <div class="cmp-input">
+            <input type="text" id="cmp2" placeholder="Joueur 2..." oninput="searchCompare('cmp2')">
+            <div class="cmp-results" id="cmp2-results"></div>
+          </div>
+        </div>
+        <div id="compare-list">
+          <div class="empty-state" style="padding:20px">
+            <p>Recherchez 2 joueurs ci-dessus pour les comparer</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Stats -->
+  <div class="tab-content" id="tab-stats">
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-head" data-i18n="charts.popular">🗺️ Maps les plus populaires</div>
+        <div class="chart-body" id="popular-maps"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head" data-i18n="charts.dist">⏱️ Distribution des temps</div>
+        <div class="chart-body" id="dist-chart"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Player Modal -->
+<div class="modal-overlay" id="player-modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-player-name">Joueur</div>
+      <div class="modal-subtitle" id="modal-player-stats">0 runs · 0 cartes</div>
+    </div>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="modal-stat-value" id="modal-wins">0</div><div class="modal-stat-label" data-i18n="player.wins">Victoires</div></div>
+      <div class="modal-stat"><div class="modal-stat-value" id="modal-maps">0</div><div class="modal-stat-label" data-i18n="player.maps">Cartes</div></div>
+      <div class="modal-stat"><div class="modal-stat-value" id="modal-avg">—</div><div class="modal-stat-label" data-i18n="player.avg_time">Temps moyen</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title" data-i18n="player.perf_title">Performances par carte</div>
+      <div class="player-runs" id="modal-runs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="auth-modal" onclick="toggleAuthModal()">
+  <div class="modal auth-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="toggleAuthModal()">&times;</button>
+    <div class="auth-modal-logo">
+      <img src="logo.png" alt="OpenRuns Logo" class="auth-modal-logo-img">
+    </div>
+    <div class="modal-header">
+      <div class="modal-title">Rejoindre l'aventure</div>
+      <div class="modal-subtitle">Connectez-vous pour lier vos records et suivre votre progression.</div>
+    </div>
+    <div class="auth-options">
+      <button class="auth-btn google" onclick="handleLogin('google')">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Continuer avec Google
+      </button>
+      <button class="auth-btn discord" onclick="handleLogin('discord')">
+        <img src="https://assets-global.website-files.com/6257adef93867e3d0394e296/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord">
+        Continuer avec Discord
+      </button>
+    </div>
+    <div class="auth-divider">ou</div>
+    <p style="font-size:13px;color:var(--text2);text-align:center">En vous connectant, vous acceptez les conditions d'utilisation.</p>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal auth-modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Finaliser votre profil</div>
+      <div class="modal-subtitle">Choisissez un pseudo et votre Public ID (définitif, non modifiable ensuite).</div>
+    </div>
+    <div class="auth-form">
+      <div class="form-group">
+        <label for="profile-username">Nom d'utilisateur</label>
+        <input type="text" id="profile-username" placeholder="Ex: Skailex">
+      </div>
+      <div class="form-group">
+        <label for="profile-public-id">Public ID OpenFront</label>
+        <input type="text" id="profile-public-id" placeholder="Votre ID public">
+      </div>
+      <button class="auth-btn google" onclick="saveUserProfile()">Enregistrer le profil</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<button class="settings-btn" id="settings-btn" onclick="toggleSettings()" title="Paramètres">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-title">Paramètres</div>
+  <div class="theme-toggle">
+    <span class="theme-toggle-label">Mode clair</span>
+    <div class="toggle-switch" id="theme-toggle" onclick="toggleLightMode()"></div>
+  </div>
+  <div class="settings-label">Couleur d'accent</div>
+  <div class="color-grid" id="color-grid"></div>
+  <div class="settings-label">Langue / Language</div>
+  <div class="settings-actions" style="margin-top: 0;">
+    <button class="settings-action-btn" onclick="setLanguage('fr')">🇫🇷 Français</button>
+    <button class="settings-action-btn" onclick="setLanguage('en')">🇬🇧 English</button>
+  </div>
+  <div class="settings-actions">
+    <button class="settings-action-btn" onclick="requestNotifs()">🔔 Notifications</button>
+  </div>
+  <button class="settings-close-btn" data-i18n="modal.close" onclick="toggleSettings()">Fermer</button>
+</div>
+
+<script src="i18n.js"></script>
+<script src="animations.js"></script>
+<script src="app.js" type="module"></script>
+<script>
+/* ====== Logo Animation System (index.html) ====== */
+(function(){
+  var logo = document.getElementById('site-logo');
+  var img  = document.getElementById('site-logo-img');
+  if (!logo || !img) return;
+
+  /* --- 3D perspective tilt on hover --- */
+  var MAX_TILT = 10; // degrees
+  logo.addEventListener('mousemove', function(e){
+    var rect = logo.getBoundingClientRect();
+    var x = (e.clientX - rect.left) / rect.width  - 0.5;  // -0.5 → 0.5
+    var y = (e.clientY - rect.top)  / rect.height - 0.5;
+    var rotY =  x * MAX_TILT;
+    var rotX = -y * MAX_TILT;
+    img.classList.add('tilted');
+    img.style.transform = 'perspective(800px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) scale(1.03)';
+  });
+
+  logo.addEventListener('mouseleave', function(){
+    img.classList.remove('tilted');
+    img.style.transform = '';
+  });
+
+  /* --- Click: flip-pulse animation then scroll to top --- */
+  var animating = false;
+  logo.addEventListener('click', function(e){
+    if (animating) return;
+    animating = true;
+    img.classList.remove('click-flip');
+    void img.offsetWidth; // force reflow
+    img.classList.add('click-flip');
+
+    // Scroll to top after a brief delay so the flip is visible
+    setTimeout(function(){
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 150);
+
+    // Clean up
+    setTimeout(function(){
+      img.classList.remove('click-flip');
+      animating = false;
+    }, 600);
+  });
+
+  /* --- Entrance animation on page load --- */
+  img.classList.add('enter-anim');
+  img.addEventListener('animationend', function onEnd(){
+    img.classList.remove('enter-anim');
+    img.removeEventListener('animationend', onEnd);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenRuns — Mon profil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Creepster&family=Montserrat:wght@900&family=Orbitron:wght@900&family=Permanent+Marker&family=Rubik+Glitch&family=Rubik+Mono+One&family=Speedy&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="profile.css?v=3">
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+<div class="container">
+  <div class="profile-page-header">
+    <div class="site-logo" id="site-logo" style="margin-bottom:8px">
+      <img src="logo.png" alt="OpenRuns Logo" class="site-logo-img" id="site-logo-img" style="height:80px;margin-top:0;margin-bottom:0">
+    </div>
+    <a href="index.html" class="profile-back-link">← Leaderboard</a>
+    <div class="auth-zone" id="auth-zone">
+      <button class="login-btn" onclick="toggleAuthModal()" id="login-btn-main">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Connexion</span>
+      </button>
+      <div class="user-container" id="user-container" style="display:none">
+        <div class="user-badge" id="user-badge-btn" onclick="toggleUserDropdown(event)">
+          <span class="user-name" id="user-display-name">—</span>
+          <svg class="chevron-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="user-dropdown-menu" id="user-dropdown-menu">
+          <button class="dropdown-item logout" onclick="handleLogout(event)">
+            <span>Se déconnecter</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="profile-loading" class="feed-card" style="padding:32px;text-align:center">
+    <div class="loading">Chargement...</div>
+  </div>
+
+  <div id="profile-gate" class="feed-card" style="display:none;padding:32px;text-align:center">
+    <p>Connectez-vous pour accéder à votre profil.</p>
+    <button class="profile-edit-btn" style="max-width:280px;margin:16px auto 0" onclick="toggleAuthModal()">Connexion</button>
+  </div>
+
+  <div id="profile-setup" class="feed-card" style="display:none;padding:28px;max-width:480px;margin:0 auto">
+    <h2 style="margin-bottom:8px">Finaliser votre profil</h2>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:20px">Le Public ID ne pourra plus être modifié après enregistrement.</p>
+    <div class="form-group" style="margin-bottom:12px">
+      <label for="setup-username">Nom d'utilisateur</label>
+      <input type="text" id="setup-username" class="search-input" style="width:100%;box-sizing:border-box">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label for="setup-public-id">Public ID OpenFront</label>
+      <input type="text" id="setup-public-id" class="search-input" style="width:100%;box-sizing:border-box" placeholder="Ex: HabCsQYR">
+    </div>
+    <button class="profile-edit-btn" onclick="saveInitialProfile()">Enregistrer</button>
+  </div>
+
+  <div id="profile-main" style="display:none">
+    <!-- Carte identité centrée -->
+    <div class="pf-hero">
+      <div class="pf-avatar" id="profile-avatar-large"></div>
+      <div class="pf-hero-info">
+        <h1 class="pf-name" id="profile-title-name">—</h1>
+        <span class="pf-badge" id="profile-public-badge">—</span>
+      </div>
+      <button class="pf-edit-btn" onclick="toggleEditPanel()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>
+
+    <!-- Formulaire d'édition (caché par défaut) -->
+    <div class="pf-edit-form" id="profile-edit-panel" style="display:none">
+      <div class="form-group" style="margin-bottom:12px">
+        <label for="edit-username">Nom d'utilisateur</label>
+        <input type="text" id="edit-username" class="search-input" style="width:100%;box-sizing:border-box">
+      </div>
+      <div class="form-group profile-locked-field" style="margin-bottom:12px">
+        <label for="edit-public-id">Public ID OpenFront</label>
+        <input type="text" id="edit-public-id" readonly disabled>
+        <p class="profile-locked-hint">Le Public ID est définitif et ne peut pas être modifié.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="profile-edit-btn" style="flex:1" onclick="saveProfileEdits()">Enregistrer</button>
+        <button class="profile-edit-btn" style="flex:1;background:var(--bg2)" onclick="toggleEditPanel()">Annuler</button>
+      </div>
+    </div>
+
+    <!-- API error banner -->
+    <div id="profile-api-error" class="profile-api-error" hidden></div>
+
+<!-- Code récompense -->
+    <div class="pf-reward-section">
+      <div class="pf-reward-header">
+        <span class="pf-reward-title">🎨 Cosmétiques</span>
+      </div>
+      <div id="pf-reward-active" style="display:none">
+        <div class="pf-reward-status">
+          <div class="pf-reward-info">
+            <span>Mes cosmétiques</span>
+          </div>
+          <div class="pf-reward-toggle">
+            <span class="pf-toggle-label" id="pf-toggle-label">Activé</span>
+            <div class="toggle-switch" id="pf-reward-toggle-switch" onclick="toggleReward()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        </div>
+        <div id="pf-cosmetics-grid" class="pf-cosmetics-grid">
+          <!-- Rempli dynamiquement par renderRewardSection() -->
+        </div>
+      </div>
+      <div id="pf-reward-form">
+        <div class="pf-reward-form-label">Ajouter un code</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="reward-code-input" class="search-input" placeholder="OR-XXXXXX" style="flex:1;box-sizing:border-box">
+          <button class="pf-reward-btn" onclick="redeemCode()">Utiliser</button>
+        </div>
+        <div id="reward-code-msg" class="pf-reward-msg"></div>
+      </div>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="pf-stats-row">
+      <div class="pf-stat">
+        <div class="pf-stat-val" id="profile-stat-wins">0</div>
+        <div class="pf-stat-lbl">Victoires</div>
+      </div>
+      <div class="pf-stat">
+        <div class="pf-stat-val" id="profile-stat-sessions">0</div>
+        <div class="pf-stat-lbl">Sessions</div>
+      </div>
+      <div class="pf-stat">
+        <div class="pf-stat-val" id="profile-stat-maps">0</div>
+        <div class="pf-stat-lbl">Cartes</div>
+      </div>
+      <div class="pf-stat">
+        <div class="pf-stat-val" id="profile-stat-global-rank">—</div>
+        <div class="pf-stat-lbl">Rang</div>
+      </div>
+    </div>
+
+    <!-- Graphique mensuel -->
+    <div class="pf-section">
+      <h2 class="pf-section-title">Victoires par mois</h2>
+      <div class="pf-chart" id="chart-monthly-wins"></div>
+    </div>
+
+    <!-- 5 dernières parties -->
+    <div class="pf-section">
+      <h2 class="pf-section-title">Dernières parties</h2>
+      <div class="pf-games" id="profile-recent-games">
+        <div class="loading">Chargement...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="auth-modal" onclick="toggleAuthModal()">
+  <div class="modal auth-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="toggleAuthModal()">&times;</button>
+    <div class="auth-modal-logo">
+      <img src="logo.png" alt="OpenRuns Logo" class="auth-modal-logo-img">
+    </div>
+    <div class="modal-header">
+      <div class="modal-title">Connexion</div>
+    </div>
+    <div class="auth-options">
+      <button class="auth-btn google" onclick="handleLogin('google')">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Continuer avec Google
+      </button>
+      <button class="auth-btn discord" onclick="handleLogin('discord')">
+        <img src="https://assets-global.website-files.com/6257adef93867e3d0394e296/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord">
+        Continuer avec Discord
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="i18n.js"></script>
+<script src="animations.js"></script>
+<script src="profile.js" type="module"></script>
+<script>
+/* ====== Logo Animation System (sub-page) ====== */
+(function(){
+  var logo = document.getElementById('site-logo');
+  var img  = document.getElementById('site-logo-img');
+  if (!logo || !img) return;
+
+  var MAX_TILT = 10;
+  logo.addEventListener('mousemove', function(e){
+    var rect = logo.getBoundingClientRect();
+    var x = (e.clientX - rect.left) / rect.width  - 0.5;
+    var y = (e.clientY - rect.top)  / rect.height - 0.5;
+    img.classList.add('tilted');
+    img.style.transform = 'perspective(800px) rotateX('+(-y*MAX_TILT)+'deg) rotateY('+(x*MAX_TILT)+'deg) scale(1.03)';
+  });
+  logo.addEventListener('mouseleave', function(){
+    img.classList.remove('tilted');
+    img.style.transform = '';
+  });
+
+  var navigating = false;
+  logo.addEventListener('click', function(e){
+    if (navigating) return;
+    navigating = true;
+    img.classList.add('exit-spin');
+    setTimeout(function(){
+      window.location.href = 'index.html';
+    }, 320);
+  });
+
+  img.classList.add('enter-anim');
+  img.addEventListener('animationend', function onEnd(){
+    img.classList.remove('enter-anim');
+    img.removeEventListener('animationend', onEnd);
+  });
+})();
+</script>
+</body>
+</html>
