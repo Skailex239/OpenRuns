@@ -424,6 +424,7 @@ async function refreshProfile() {
 let ownedTypes = [];       // Tous les cosmétiques possédés: ["vip", "flame", "rainbow"]
 let activeType = null;     // Le cosmétique actuellement sélectionné (ou null)
 let rewardActivated = true; // Toggle global on/off
+let redeemInProgress = false; // Debounce flag to prevent double-clicks
 
 const REWARD_LABELS = {
   vip:       { name: "VIP",       desc: "Pseudo rouge vif animé",          css: "player-vip" },
@@ -607,58 +608,85 @@ window.redeemCode = async () => {
   const msgEl = document.getElementById("reward-code-msg");
   if (!input || !currentUser) return;
 
+  // Debounce: prevent rapid double-clicks
+  if (redeemInProgress) {
+    if (msgEl) { msgEl.textContent = "Vérification en cours..."; msgEl.className = "pf-reward-msg"; }
+    return;
+  }
+
   const code = input.value.trim().toUpperCase();
   if (!code) {
     if (msgEl) { msgEl.textContent = "Entrez un code."; msgEl.className = "pf-reward-msg error"; }
     return;
   }
 
+  redeemInProgress = true;
   if (msgEl) { msgEl.textContent = "Vérification..."; msgEl.className = "pf-reward-msg"; }
 
   try {
-    // Chercher le code dans la collection reward-codes
-    const q = query(collection(db, "reward-codes"), where("code", "==", code), where("used", "==", false));
+    // Step 1: Query the code WITHOUT the 'used' filter to check if it exists at all
+    const q = query(collection(db, "reward-codes"), where("code", "==", code));
     const snap = await getDocs(q);
 
+    // Code doesn't exist at all
     if (snap.empty) {
-      if (msgEl) { msgEl.textContent = "Code invalide ou déjà utilisé."; msgEl.className = "pf-reward-msg error"; }
+      if (msgEl) { msgEl.textContent = "Code invalide."; msgEl.className = "pf-reward-msg error"; }
       return;
     }
 
     const codeDoc = snap.docs[0];
     const codeData = codeDoc.data();
     const rewardType = codeData.type || "vip";
+    const redeemedBy = Array.isArray(codeData.redeemedBy) ? codeData.redeemedBy : [];
 
-    // Vérifier si le joueur possède déjà ce cosmétique
+    // Step 2: Check if current user already redeemed this code
+    if (redeemedBy.includes(currentUser.uid)) {
+      if (msgEl) { msgEl.textContent = "Vous avez déjà utilisé ce code."; msgEl.className = "pf-reward-msg error"; }
+      return;
+    }
+
+    // Step 3: Check if someone else already used this code (globally single-use)
+    if (codeData.used === true && redeemedBy.length > 0 && !redeemedBy.includes(currentUser.uid)) {
+      if (msgEl) { msgEl.textContent = "Ce code a déjà été utilisé."; msgEl.className = "pf-reward-msg error"; }
+      return;
+    }
+
+    // Step 4: Check if user already owns this cosmetic type
     if (ownedTypes.includes(rewardType)) {
       if (msgEl) { msgEl.textContent = "Vous possédez déjà ce cosmétique !"; msgEl.className = "pf-reward-msg error"; }
       return;
     }
 
-    // Marquer le code comme utilisé
-    await setDoc(doc(db, "reward-codes", codeDoc.id), {
-      ...codeData,
-      used: true,
-      usedBy: currentUser.uid,
-      usedAt: new Date().toISOString(),
-    }, { merge: true });
-
-    // Ajouter le cosmétique à la liste des cosmétiques possédés
+    // Step 5: Redeem — update code doc, user rewards, and user profile
+    const newRedeemedBy = [...redeemedBy, currentUser.uid];
     const newOwnedTypes = [...ownedTypes, rewardType];
     const newActiveType = rewardType; // Nouveau code → automatiquement actif
+    const now = new Date().toISOString();
 
-    await setDoc(doc(db, "public-rewards", currentUser.uid), {
-      username: currentUser.name,
-      ownedTypes: newOwnedTypes,
-      activeType: newActiveType,
-      activated: true,
-      activatedAt: new Date().toISOString(),
-    }, { merge: true });
+    // Consolidate Firestore writes — do them in parallel
+    await Promise.all([
+      // Mark the code as used (per-user tracking via redeemedBy array)
+      setDoc(doc(db, "reward-codes", codeDoc.id), {
+        used: true,
+        redeemedBy: newRedeemedBy,
+        lastUsedBy: currentUser.uid,
+        lastUsedAt: now,
+      }, { merge: true }),
 
-    // Mettre à jour le profil utilisateur
-    await setDoc(doc(db, "users", currentUser.uid), {
-      reward: newActiveType,
-    }, { merge: true });
+      // Add cosmetic to user's owned list
+      setDoc(doc(db, "public-rewards", currentUser.uid), {
+        username: currentUser.name,
+        ownedTypes: newOwnedTypes,
+        activeType: newActiveType,
+        activated: true,
+        activatedAt: now,
+      }, { merge: true }),
+
+      // Update user profile
+      setDoc(doc(db, "users", currentUser.uid), {
+        reward: newActiveType,
+      }, { merge: true }),
+    ]);
 
     ownedTypes = newOwnedTypes;
     activeType = newActiveType;
@@ -671,6 +699,8 @@ window.redeemCode = async () => {
   } catch (e) {
     console.error("[profile] Erreur redemption code:", e);
     if (msgEl) { msgEl.textContent = "Erreur lors de l'activation. Réessayez."; msgEl.className = "pf-reward-msg error"; }
+  } finally {
+    redeemInProgress = false;
   }
 };
 
