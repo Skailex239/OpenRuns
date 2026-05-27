@@ -355,9 +355,6 @@ function redirectToProfileIfRequested() {
 
 let refreshInterval=null,prevRunCount=0,totalRunsCount=0;
 let _lastETag=null,_processDataCache=null;
-const SYNC_INTERVAL=180000; // 3 minutes
-let syncCountdown=180; // secondes restantes
-let syncCountdownTimer=null;
 
 function showProgressBar(){const b=document.getElementById('loading-bar');if(b){b.style.opacity='1';b.style.width='0%'}}
 function hideProgressBar(){const b=document.getElementById('loading-bar');if(b){b.style.width='100%';setTimeout(()=>{b.style.opacity='0'},400)}}
@@ -436,12 +433,11 @@ async function loadData(){
     }
 
     if(refreshInterval) clearInterval(refreshInterval);
-    refreshInterval=setInterval(autoRefresh, SYNC_INTERVAL);
-    startSyncCountdown();
+    refreshInterval=setInterval(autoRefresh, 60000);
     hideProgressBar();
     const elapsed=((performance.now()-t0)/1000).toFixed(1);
     console.log(`[OpenRuns] ✅ Chargé en ${elapsed}s — ${allRuns.length} runs, ${allMaps.length} maps`);
-    console.log(`[OpenRuns] 🔄 Auto-sync ACTIF — rafraîchissement toutes les 3 min`);
+    console.log(`[OpenRuns] 🔄 Auto-sync ACTIF — rafraîchissement toutes les 60s`);
     console.timeEnd('loadData');
   }catch(e){
     console.error("Erreur critique chargement:", e);
@@ -528,41 +524,6 @@ async function autoRefresh(){
   }catch(e){
     console.error("[OpenRuns] ❌ Erreur auto-refresh:", e);
   }
-  // Toujours relancer le countdown même en cas d'erreur
-  startSyncCountdown();
-}
-
-/* ====== SYNC COUNTDOWN ====== */
-function startSyncCountdown(){
-  if(syncCountdownTimer) clearInterval(syncCountdownTimer);
-  syncCountdown = SYNC_INTERVAL / 1000; // 180 secondes
-  updateSyncCountdownUI();
-  syncCountdownTimer = setInterval(() => {
-    syncCountdown--;
-    if(syncCountdown <= 0){
-      clearInterval(syncCountdownTimer);
-      syncCountdownTimer = null;
-    }
-    updateSyncCountdownUI();
-  }, 1000);
-}
-
-function updateSyncCountdownUI(){
-  const el = document.getElementById('sync-countdown');
-  if(!el) return;
-  if(syncCountdown <= 0){
-    el.textContent = '🔄 Sync...';
-    el.style.color = 'var(--accent)';
-    return;
-  }
-  const min = Math.floor(syncCountdown / 60);
-  const sec = String(syncCountdown % 60).padStart(2, '0');
-  el.textContent = `🔄 ${min}:${sec}`;
-  // Couleur progressive : vert → jaune → rouge
-  const pct = syncCountdown / (SYNC_INTERVAL / 1000);
-  if(pct > 0.5) el.style.color = 'var(--green, #3dd68c)';
-  else if(pct > 0.15) el.style.color = '#f0c040';
-  else el.style.color = '#ef4444';
 }
 
 // Re-sync immédiat quand l'onglet redevient visible
@@ -786,7 +747,7 @@ function updateLastUpdate(){
   if(allRuns.length){
     const lr=allRuns.reduce((l,r)=>new Date(r.timestamp)>new Date(l.timestamp)?r:l,allRuns[0]);
     const formattedTime = new Date(lr.timestamp).toLocaleString(localeStr);
-    document.getElementById("last-update").innerHTML = t("ui.last_update", { time: formattedTime }) + ' <span id="sync-countdown" style="margin-left:8px;font-weight:600;font-size:12px"></span><span class="refresh-badge" id="refresh-badge" style="display:none">LIVE</span>';
+    document.getElementById("last-update").innerHTML = t("ui.last_update", { time: formattedTime }) + '<span class="refresh-badge" id="refresh-badge" style="display:none">LIVE</span>';
   }
 
   if (gameCommit) {
