@@ -716,35 +716,33 @@ window.redeemCode = async () => {
     }
 
     // Step 5: Redeem — update code doc, user rewards, and user profile
+    // Use SEQUENTIAL writes to avoid "Write stream exhausted maximum allowed queued writes"
     const newRedeemedBy = [...redeemedBy, currentUser.uid];
     const newOwnedTypes = [...ownedTypes, rewardType];
     const newActiveType = rewardType; // Nouveau code → automatiquement actif
     const now = new Date().toISOString();
 
-    // Consolidate Firestore writes — do them in parallel
-    await Promise.all([
-      // Mark the code as used (per-user tracking via redeemedBy array)
-      setDoc(doc(db, "reward-codes", codeDoc.id), {
-        used: true,
-        redeemedBy: newRedeemedBy,
-        lastUsedBy: currentUser.uid,
-        lastUsedAt: now,
-      }, { merge: true }),
+    // 1) Mark the code as used
+    await setDoc(doc(db, "reward-codes", codeDoc.id), {
+      used: true,
+      redeemedBy: newRedeemedBy,
+      lastUsedBy: currentUser.uid,
+      lastUsedAt: now,
+    }, { merge: true });
 
-      // Add cosmetic to user's owned list
-      setDoc(doc(db, "public-rewards", currentUser.uid), {
-        username: currentUser.name,
-        ownedTypes: newOwnedTypes,
-        activeType: newActiveType,
-        activated: true,
-        activatedAt: now,
-      }, { merge: true }),
+    // 2) Add cosmetic to user's owned list
+    await setDoc(doc(db, "public-rewards", currentUser.uid), {
+      username: currentUser.name,
+      ownedTypes: newOwnedTypes,
+      activeType: newActiveType,
+      activated: true,
+      activatedAt: now,
+    }, { merge: true });
 
-      // Update user profile
-      setDoc(doc(db, "users", currentUser.uid), {
-        reward: newActiveType,
-      }, { merge: true }),
-    ]);
+    // 3) Update user profile
+    await setDoc(doc(db, "users", currentUser.uid), {
+      reward: newActiveType,
+    }, { merge: true });
 
     ownedTypes = newOwnedTypes;
     activeType = newActiveType;

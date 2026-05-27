@@ -548,6 +548,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 .run-row.is-ocean,.run-row.is-miami,.run-row.is-toxic,.run-row.is-chroma{border-left:none !important}
 
 /* ── Global leaderboard overrides for new skins ── */
+.global-player.rgb-cyberpunk,.global-player.rgb-sunset,.global-player.rgb-aurore,
+.global-player.rgb-pastel,.global-player.rgb-gold,.global-player.rgb-volcano,
+.global-player.rgb-ocean,.global-player.rgb-miami,.global-player.rgb-toxic,
+.global-player.rgb-chroma{font-weight:900 !important;font-size:15px !important;display:inline-block !important}
+
+/* ── Global leaderboard overrides for new skins ── */
 .global-player.rgb-cyberpunk{font-family:'Orbitron',sans-serif !important;background:linear-gradient(90deg,#ff00ff,#00ffff,#ff00ff) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 3s linear infinite !important;filter:brightness(1.2) !important}
 .global-player.rgb-sunset{font-family:'Cinzel',serif !important;background:linear-gradient(90deg,#ff4500,#ff8c00,#ffd700,#ff6347) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 4s linear infinite !important}
 .global-player.rgb-aurore{font-family:'Montserrat',sans-serif !important;background:linear-gradient(90deg,#00ff87,#60efff,#0061ff,#60efff,#00ff87) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 5s linear infinite !important}
