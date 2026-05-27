@@ -384,14 +384,28 @@ function redirectToProfileIfRequested() {
 }
 
 let refreshInterval=null,prevRunCount=0,totalRunsCount=0;
+let _lastETag=null,_processDataCache=null;
+
+function showProgressBar(){const b=document.getElementById('loading-bar');if(b){b.style.opacity='1';b.style.width='0%'}}
+function hideProgressBar(){const b=document.getElementById('loading-bar');if(b){b.style.width='100%';setTimeout(()=>{b.style.opacity='0'},400)}}
+function setProgressBar(pct){const b=document.getElementById('loading-bar');if(b)b.style.width=pct+'%'}
+
+function debounce(fn,ms){let t;return function(...a){clearTimeout(t);t=setTimeout(()=>fn.apply(this,a),ms)}}
+
 async function loadData(){
+  const t0=performance.now();
+  console.time('loadData');
+  console.log('[OpenRuns] ⏳ Chargement des données...');
+  showProgressBar();
   try{
+    setProgressBar(5);
     // Charger les données de fusion et les données compressées en parallèle
     const [runsRes, aliasRes] = await Promise.allSettled([
       fetch("runs.json.gz?_="+Date.now()),
       fetch("player_aliases.json?_="+Date.now())
     ]);
 
+    setProgressBar(15);
     // Alias map (optionnel)
     if (aliasRes.status === 'fulfilled' && aliasRes.value.ok) {
       aliasMap = await aliasRes.value.json();
@@ -405,6 +419,8 @@ async function loadData(){
     // Décompression native GZIP (DecompressionStream)
     let data;
     try {
+      console.log('[OpenRuns] 📦 Décompression GZIP...');
+      setProgressBar(30);
       const ds = new DecompressionStream("gzip");
       const decompressedStream = runsRes.value.body.pipeThrough(ds);
       data = await new Response(decompressedStream).json();
@@ -416,6 +432,8 @@ async function loadData(){
       data = await fallback.json();
     }
 
+    console.log('[OpenRuns] 🔍 Parsing des données...');
+    setProgressBar(50);
     console.log("Données reçues:", { 
       totalCount: data.totalCount, 
       runsLength: data.runs ? data.runs.length : (Array.isArray(data) ? data.length : "N/A") 
@@ -434,7 +452,11 @@ async function loadData(){
       throw new Error("Format de données invalide dans runs.json");
     }
     
+    console.log(`[OpenRuns] ⚙️ Traitement de ${allRuns.length} runs...`);
+    setProgressBar(65);
     processData();
+    setProgressBar(80);
+    console.log('[OpenRuns] 🎨 Rendu...');
     renderAll();
     if (!activeMap && allMaps.length && !mapParam) {
       selectMap(allMaps[0].map);
@@ -442,17 +464,38 @@ async function loadData(){
 
     if(refreshInterval) clearInterval(refreshInterval);
     refreshInterval=setInterval(autoRefresh, 60000);
+    hideProgressBar();
+    const elapsed=((performance.now()-t0)/1000).toFixed(1);
+    console.log(`[OpenRuns] ✅ Chargé en ${elapsed}s — ${allRuns.length} runs, ${allMaps.length} maps`);
+    console.timeEnd('loadData');
   }catch(e){
     console.error("Erreur critique chargement:", e);
+    hideProgressBar();
     document.getElementById("map-list").innerHTML=`<div class="error">Erreur: ${e.message}</div>`;
   }
 }
 
 async function autoRefresh(){
   try{
-    const r=await fetch("runs.json?_="+Date.now());if(!r.ok)return;
-    const data=await r.json();
-    const d = (data.runs && Array.isArray(data.runs)) ? data.runs : (Array.isArray(data) ? data : null);
+    // Utiliser runs.json.gz avec ETag pour éviter de re-télécharger si inchangé
+    let data, d;
+    try {
+      const headers = {};
+      if (_lastETag) headers['If-None-Match'] = _lastETag;
+      const r = await fetch("runs.json.gz?_="+Date.now(), { headers });
+      if (r.status === 304) return; // Pas de changement
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const etag = r.headers.get('ETag');
+      if (etag) _lastETag = etag;
+      const ds = new DecompressionStream("gzip");
+      const decompressed = r.body.pipeThrough(ds);
+      data = await new Response(decompressed).json();
+    } catch(e) {
+      // Fallback sur runs.json non compressé
+      const r=await fetch("runs.json?_="+Date.now());if(!r.ok)return;
+      data=await r.json();
+    }
+    d = (data.runs && Array.isArray(data.runs)) ? data.runs : (Array.isArray(data) ? data : null);
     
     if(!d) return;
 

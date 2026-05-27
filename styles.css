@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+/* Loading progress bar */
+.loading-bar-track{position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;background:transparent;pointer-events:none}
+.loading-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accentL),var(--accent));background-size:200% 100%;animation:loadingShimmer 1.5s linear infinite;border-radius:0 2px 2px 0;transition:width 0.3s ease,opacity 0.4s ease;box-shadow:0 0 8px var(--accentGlow);opacity:0}
+@keyframes loadingShimmer{0%{background-position:200% 0}100%{background-position:0 0}}
+
 :root {
   --bg:#08080d; --bg2:#0f0f17; --card:#141420; --card2:#1a1a28;
   --rim:rgba(255,255,255,.06); --rim2:rgba(255,255,255,.12);

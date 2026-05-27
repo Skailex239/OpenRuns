@@ -547,24 +547,36 @@ function renderRewardSection() {
 
     // Afficher la grille de cosmétiques possédés
     if (cosmeticsGrid) {
-      cosmeticsGrid.innerHTML = ownedTypes.map(type => {
+      // Carte "Aucun" en premier
+      const noneCard = `
+        <div class="pf-cosmetic-card none ${!activeType ? 'selected' : ''}" onclick="selectCosmetic(null)">
+          <span class="pf-none-icon">✕</span>
+          <span class="pf-cosmetic-name">Aucun</span>
+          <span class="pf-cosmetic-desc">Pas de skin actif</span>
+          ${!activeType ? '<span class="pf-cosmetic-check">✓</span>' : ''}
+        </div>
+      `;
+      const cards = ownedTypes.map(type => {
         const info = REWARD_LABELS[type] || { name: type.toUpperCase(), desc: "Cosmétique spécial", css: `player-${type}` };
         const isSelected = type === activeType;
         const cssClass = info.css || `player-${type}`;
         return `
           <div class="pf-cosmetic-card ${isSelected ? 'selected' : ''} ${type}" onclick="selectCosmetic('${type}')">
-            <span class="pf-cosmetic-name ${cssClass}">${info.name}</span>
+            <span class="pf-cosmetic-preview ${cssClass}">ABC</span>
+            <span class="pf-cosmetic-name">${info.name}</span>
             <span class="pf-cosmetic-desc">${info.desc}</span>
             ${isSelected ? '<span class="pf-cosmetic-check">✓</span>' : ''}
           </div>
         `;
       }).join("");
+      cosmeticsGrid.innerHTML = noneCard + cards;
     }
 
     // Mettre à jour le toggle global
     if (toggleSwitch) {
       toggleSwitch.classList.toggle("on", rewardActivated);
-      toggleSwitch.classList.remove("is-vip", "is-flame", "is-rainbow");
+      // Retirer dynamiquement toutes les classes de skin
+      Object.keys(REWARD_LABELS).forEach(k => toggleSwitch.classList.remove(`is-${k}`));
       if (activeType) toggleSwitch.classList.add(`is-${activeType}`);
     }
     if (toggleLabel) {
@@ -581,7 +593,9 @@ function renderRewardSection() {
  * Sélectionne un cosmétique parmi ceux possédés
  */
 window.selectCosmetic = async (type) => {
-  if (!currentUser || !ownedTypes.includes(type)) return;
+  if (!currentUser) return;
+  // type === null means "Aucun" (deselect), otherwise must be owned
+  if (type !== null && !ownedTypes.includes(type)) return;
 
   // Si on clique sur celui déjà actif, on le désélectionne (activeType = null)
   const newActiveType = (type === activeType) ? null : type;
