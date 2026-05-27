@@ -467,6 +467,7 @@ async function loadData(){
     hideProgressBar();
     const elapsed=((performance.now()-t0)/1000).toFixed(1);
     console.log(`[OpenRuns] ✅ Chargé en ${elapsed}s — ${allRuns.length} runs, ${allMaps.length} maps`);
+    console.log(`[OpenRuns] 🔄 Auto-sync ACTIF — rafraîchissement toutes les 60s`);
     console.timeEnd('loadData');
   }catch(e){
     console.error("Erreur critique chargement:", e);
@@ -477,13 +478,22 @@ async function loadData(){
 
 async function autoRefresh(){
   try{
+    console.log('[OpenRuns] 🔄 Auto-sync en cours...');
     // Utiliser runs.json.gz avec ETag pour éviter de re-télécharger si inchangé
     let data, d;
     try {
       const headers = {};
       if (_lastETag) headers['If-None-Match'] = _lastETag;
       const r = await fetch("runs.json.gz?_="+Date.now(), { headers });
-      if (r.status === 304) return; // Pas de changement
+      if (r.status === 304) {
+        console.log('[OpenRuns] ✅ Sync: données inchangées (304)');
+        // Même si les runs n'ont pas changé, on refresh les aliases
+        try {
+          const aliasRes = await fetch("player_aliases.json?_="+Date.now());
+          if (aliasRes.ok) aliasMap = await aliasRes.json();
+        } catch(e) { /* non-critique */ }
+        return; // Pas de changement
+      }
       if (!r.ok) throw new Error("HTTP " + r.status);
       const etag = r.headers.get('ETag');
       if (etag) _lastETag = etag;
@@ -498,6 +508,15 @@ async function autoRefresh(){
     d = (data.runs && Array.isArray(data.runs)) ? data.runs : (Array.isArray(data) ? data : null);
     
     if(!d) return;
+
+    // Aussi recharger les aliases en parallèle
+    try {
+      const aliasRes = await fetch("player_aliases.json?_="+Date.now());
+      if (aliasRes.ok) {
+        aliasMap = await aliasRes.json();
+        console.log(`[OpenRuns] 🔄 ${Object.keys(aliasMap).length} identités joueurs rechargées`);
+      }
+    } catch(e) { /* non-critique */ }
 
     if(d.length !== allRuns.length){
       const newRuns = d.length - allRuns.length;
@@ -515,6 +534,8 @@ async function autoRefresh(){
         setTimeout(()=>badge.style.display='none',5000);
       }
       
+      console.log(`[OpenRuns] ✅ Sync: ${newRuns > 0 ? '+'+newRuns+' nouveaux runs' : 'données mises à jour'} (total: ${allRuns.length})`);
+      
       if(newRuns > 0){
         const latest=[...allRuns].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0];
         
@@ -527,9 +548,11 @@ async function autoRefresh(){
           notifyNewRecord(latest.player+' a gagné sur '+latest.map+' !');
         }
       }
+    } else {
+      console.log('[OpenRuns] ✅ Sync: même nombre de runs, pas de changement');
     }
   }catch(e){
-    console.error("Erreur auto-refresh:", e);
+    console.error("[OpenRuns] ❌ Erreur auto-refresh:", e);
   }
 }
 function processData(){
