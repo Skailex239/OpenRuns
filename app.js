@@ -198,9 +198,39 @@ async function fetchPlayerClientIds(publicId, cachedSessions) {
 }
 
 /**
- * Skin DB supprimée — les cosmétiques ne sont plus gérés via Firestore.
- * vipPlayers reste disponible pour un éventuel futur système.
+ * Charge les joueurs VIP depuis Firestore (collection public-rewards)
+ * Ces données sont publiques et servent à afficher le style VIP sur le leaderboard
  */
+async function loadVipPlayers() {
+  try {
+    // Listener temps réel sur public-rewards pour que les toggles cosmétiques
+    // se reflètent instantanément sur le leaderboard de tout le monde
+    onSnapshot(collection(db, "public-rewards"), (snap) => {
+      vipPlayers = new Map();
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        // Nouveau format: activeType (cosmétique sélectionné)
+        // Ancien format: type (rétrocompatibilité)
+        const rewardType = data.activeType || data.type || null;
+        // Seulement les joueurs dont le cosmétique est activé et ont un type actif
+        if (data.username && rewardType && data.activated !== false) {
+          vipPlayers.set(data.username, rewardType);
+        }
+      });
+      // Re-render si on a déjà des données
+      if (allRuns.length > 0) {
+        processData();
+        renderAll();
+      }
+    }, (error) => {
+      console.warn("[app] Firestore VIP listener error (non-critique):", error.message);
+      vipPlayers = new Map();
+    });
+  } catch (e) {
+    console.warn("[app] Erreur chargement VIP:", e);
+    vipPlayers = new Map();
+  }
+}
 
 function showProfileModal() {
   document.getElementById('profile-modal').classList.add('active');
@@ -1080,6 +1110,7 @@ const mapParam=urlParams.get('map');
 const tabParam=urlParams.get('tab');
 redirectToProfileIfRequested();
 loadData().then(()=>{
+  loadVipPlayers(); // Charger les joueurs VIP en parallèle
   if(mapParam)selectMap(mapParam);
   if (tabParam === 'profile') {
     window.location.replace('profile.html');

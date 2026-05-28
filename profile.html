@@ -94,8 +94,35 @@
     <!-- API error banner -->
     <div id="profile-api-error" class="profile-api-error" hidden></div>
 
-<!-- Code récompense — SUPPRIMÉ (skin DB retirée) -->
-    <div class="pf-reward-section" style="display:none">
+<!-- Code récompense -->
+    <div class="pf-reward-section">
+      <div class="pf-reward-header">
+        <span class="pf-reward-title">🎨 Cosmétiques</span>
+      </div>
+      <div id="pf-reward-active" style="display:none">
+        <div class="pf-reward-status">
+          <div class="pf-reward-info">
+            <span>Mes cosmétiques</span>
+          </div>
+          <div class="pf-reward-toggle">
+            <span class="pf-toggle-label" id="pf-toggle-label">Activé</span>
+            <div class="toggle-switch" id="pf-reward-toggle-switch" onclick="toggleReward()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        </div>
+        <div id="pf-cosmetics-grid" class="pf-cosmetics-grid">
+          <!-- Rempli dynamiquement par renderRewardSection() -->
+        </div>
+      </div>
+      <div id="pf-reward-form">
+        <div class="pf-reward-form-label">Ajouter un code</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="reward-code-input" class="search-input" placeholder="OR-XXXXXX" style="flex:1;box-sizing:border-box">
+          <button class="pf-reward-btn" onclick="redeemCode()">Utiliser</button>
+        </div>
+        <div id="reward-code-msg" class="pf-reward-msg"></div>
+      </div>
     </div>
 
     <!-- Stats rapides -->
