@@ -531,7 +531,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
   animation:bouge-rgb 4s linear infinite !important;
 }
 
-/* ── PRISM ── Multicouleurs dégradé glissement continu */
+/* ── PRISM ── Multicouleurs dégradé glissement continu sans coupure */
 @keyframes prism-slide{
   from{background-position:0% 50%}
   to{background-position:100% 50%}
@@ -539,13 +539,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 .rgb-prism{
   display:inline-block;
   font-family:'Orbitron',sans-serif;
-  background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055);
+  background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055);
   background-size:200% auto;
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   background-clip:text;
   color:transparent;
-  animation:prism-slide 2s linear infinite;
+  animation:prism-slide 3s linear infinite;
 }
 
 /* ── Leaderboard run-row overrides for new skins ── */
@@ -568,7 +568,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 .run-row.is-miami .run-player{display:inline-block !important;font-weight:900 !important;font-size:16px !important;font-family:'Permanent Marker',cursive !important;background:linear-gradient(90deg,#ff6ec7,#7b68ee,#ff6ec7) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 3s linear infinite !important}
 .run-row.is-toxic .run-player{display:inline-block !important;font-weight:900 !important;font-size:16px !important;font-family:'Speedy',cursive !important;background:linear-gradient(90deg,#39ff14,#7fff00,#adff2f,#7fff00,#39ff14) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 2s linear infinite !important;filter:brightness(1.15) !important}
 .run-row.is-chroma .run-player{display:inline-block !important;font-weight:900 !important;font-size:16px !important;font-family:'Montserrat',sans-serif !important;background:linear-gradient(90deg,#ff0000,#ff8800,#ffff00,#00ff00,#00aaff,#8800ff,#ff0088,#ff0000) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 4s linear infinite !important}
-.run-row.is-prism .run-player{display:inline-block;font-weight:900;font-size:16px;font-family:'Orbitron',sans-serif;background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;animation:prism-slide 2s linear infinite}
+.run-row.is-prism .run-player{display:inline-block;font-weight:900;font-size:16px;font-family:'Orbitron',sans-serif;background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;animation:prism-slide 3s linear infinite}
 
 /* Pas de border-left sur les rows des nouveaux skins */
 .run-row.is-cyberpunk,.run-row.is-sunset,.run-row.is-aurore,
@@ -593,4 +593,4 @@ body{background:var(--bg);color:var(--text);font-family:var(--f);min-height:100v
 .global-player.rgb-miami{font-family:'Permanent Marker',cursive !important;background:linear-gradient(90deg,#ff6ec7,#7b68ee,#ff6ec7) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 3s linear infinite !important}
 .global-player.rgb-toxic{font-family:'Speedy',cursive !important;background:linear-gradient(90deg,#39ff14,#7fff00,#adff2f,#7fff00,#39ff14) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 2s linear infinite !important;filter:brightness(1.15) !important}
 .global-player.rgb-chroma{font-family:'Montserrat',sans-serif !important;background:linear-gradient(90deg,#ff0000,#ff8800,#ffff00,#00ff00,#00aaff,#8800ff,#ff0088,#ff0000) !important;background-size:200% auto !important;-webkit-background-clip:text !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;color:transparent !important;animation:bouge-rgb 4s linear infinite !important}
-.global-player.rgb-prism{font-family:'Orbitron',sans-serif;background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;animation:prism-slide 2s linear infinite}
+.global-player.rgb-prism{font-family:'Orbitron',sans-serif;background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;animation:prism-slide 3s linear infinite}
