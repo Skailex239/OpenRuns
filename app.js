@@ -870,7 +870,7 @@ function renderLeaderboard(d){
     const rewardType = vipPlayers.get(r.player) || null;
     const isVip = !!rewardType;
     // Nouveaux skins utilisent la classe rgb-{type} au lieu de player-{type}
-    const isNewSkinType = ['cyberpunk','sunset','aurore','pastel','gold','volcano','ocean','miami','toxic','chroma'].includes(rewardType);
+    const isNewSkinType = ['cyberpunk','sunset','aurore','pastel','gold','volcano','ocean','miami','toxic','chroma','prism'].includes(rewardType);
     const cosmeticClass = isVip ? ` is-${rewardType}` : '';
     const cosmeticNameClass = isVip ? (isNewSkinType ? ` rgb-${rewardType}` : ` player-${rewardType}`) : '';
     // Pas de tag/badge rectangle — juste le dégradé sur le pseudo
@@ -1001,7 +1001,7 @@ function renderGlobal(){
       const isMeClass = p._isMe ? 'is-me' : '';
       const rewardType = vipPlayers.get(p.player) || null;
       const isVip = !!rewardType;
-      const isNewSkinType = ['cyberpunk','sunset','aurore','pastel','gold','volcano','ocean','miami','toxic','chroma'].includes(rewardType);
+      const isNewSkinType = ['cyberpunk','sunset','aurore','pastel','gold','volcano','ocean','miami','toxic','chroma','prism'].includes(rewardType);
       const cosmeticClass = isVip ? ` is-${rewardType}` : '';
       const cosmeticNameClass = isVip ? (isNewSkinType ? ` rgb-${rewardType}` : ` player-${rewardType}`) : '';
       return '<tr class="'+isMeClass+cosmeticClass+'"><td class="global-rank '+rc+'">'+(i+1)+'</td><td class="global-player'+cosmeticNameClass+'" onclick="showPlayer(\''+esc(p.player)+'\')">'+p.player+'</td><td class="global-points">'+p.points+'</td><td class="global-wins">'+p.wins+'</td></tr>';

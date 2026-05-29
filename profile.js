@@ -517,6 +517,7 @@ const REWARD_LABELS = {
   miami:     { name: "MIAMI",     desc: "Néon pink / violet",              css: "rgb-miami" },
   toxic:     { name: "TOXIC",     desc: "Acide vert radioactif",            css: "rgb-toxic" },
   chroma:    { name: "CHROMA",    desc: "Arc-en-ciel complet vibrant",      css: "rgb-chroma" },
+  prism:     { name: "PRISM",     desc: "Prisme multicouleurs néon pulsant", css: "rgb-prism" },
 };
 
 /**
@@ -680,7 +681,8 @@ function applyProfileVipStyle() {
   nameEl.classList.remove(
     "player-vip", "player-flame", "player-rainbow",
     "rgb-cyberpunk", "rgb-sunset", "rgb-aurore", "rgb-pastel",
-    "rgb-gold", "rgb-volcano", "rgb-ocean", "rgb-miami", "rgb-toxic", "rgb-chroma"
+    "rgb-gold", "rgb-volcano", "rgb-ocean", "rgb-miami", "rgb-toxic", "rgb-chroma",
+    "rgb-prism"
   );
 
   // Appliquer le style du cosmétique actif si activé
