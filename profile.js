@@ -423,6 +423,7 @@ async function refreshProfile() {
 
   if (apiSessions.length > 0 && currentUser.uid) {
     try {
+      _skipNextSnapshot = true; // Ignorer le prochain snapshot causé par notre propre write
       const ref = doc(db, "users", currentUser.uid);
       const update = {
         openFrontSessions: apiSessions.map(s => ({
@@ -443,6 +444,7 @@ async function refreshProfile() {
       await setDoc(ref, update, { merge: true });
     } catch (e) {
       console.warn("[profile] Erreur mise à jour Firestore:", e);
+      _skipNextSnapshot = false;
     }
   }
 
@@ -918,6 +920,7 @@ document.addEventListener("click", (e) => {
 /* ── Auth state ── */
 
 let profileUnsub = null;
+let _skipNextSnapshot = false; // Éviter la boucle onSnapshot → refreshProfile → setDoc → onSnapshot
 
 onAuthStateChanged(auth, async (user) => {
   if (profileUnsub) {
@@ -971,6 +974,12 @@ onAuthStateChanged(auth, async (user) => {
 
     profileUnsub = onSnapshot(doc(db, "users", user.uid), (snap) => {
       if (!snap.exists()) return;
+      // Éviter la boucle : si on vient d'écrire, on ignore ce snapshot
+      if (_skipNextSnapshot) {
+        _skipNextSnapshot = false;
+        firestoreProfile = snap.data();
+        return;
+      }
       firestoreProfile = snap.data();
       refreshProfile();
     }, (error) => {
