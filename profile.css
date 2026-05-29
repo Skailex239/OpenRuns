@@ -894,12 +894,38 @@
 .pf-cosmetic-card.selected.miami{border-color:#ff6ec7;background:rgba(255,110,199,0.08);box-shadow:0 0 12px rgba(255,110,199,0.2)}
 .pf-cosmetic-card.selected.toxic{border-color:#39ff14;background:rgba(57,255,20,0.08);box-shadow:0 0 12px rgba(57,255,20,0.2)}
 .pf-cosmetic-card.selected.chroma{border-color:#8800ff;background:rgba(136,0,255,0.08);box-shadow:0 0 12px rgba(136,0,255,0.2)}
+.pf-cosmetic-card.selected.prism{border-color:#cc00ff;background:linear-gradient(135deg,rgba(255,0,85,0.08),rgba(0,255,136,0.08),rgba(102,68,255,0.08));box-shadow:0 0 16px rgba(204,0,255,0.25),inset 0 0 12px rgba(204,0,255,0.06)}
+
+/* PRISM skin preview in profile */
+.pf-name.rgb-prism{
+  display:inline-block !important;
+  font-family:'Orbitron',sans-serif !important;
+  background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055) !important;
+  background-size:200% auto !important;
+  -webkit-background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  background-clip:text !important;
+  color:transparent !important;
+  animation:prism-slide 3s linear infinite !important;
+}
+.pf-cosmetic-preview.rgb-prism{
+  display:inline-block !important;
+  font-family:'Orbitron',sans-serif !important;
+  background:linear-gradient(90deg,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055,#ff6600,#ffdd00,#00ff88,#00ccff,#6644ff,#cc00ff,#ff0055) !important;
+  background-size:200% auto !important;
+  -webkit-background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  background-clip:text !important;
+  color:transparent !important;
+  animation:prism-slide 3s linear infinite !important;
+}
 
 /* Mobile overrides for new skins */
 @media(max-width:700px){
   .pf-name.rgb-cyberpunk,.pf-name.rgb-sunset,.pf-name.rgb-aurore,
   .pf-name.rgb-pastel,.pf-name.rgb-gold,.pf-name.rgb-volcano,
-  .pf-name.rgb-ocean,.pf-name.rgb-miami,.pf-name.rgb-toxic,.pf-name.rgb-chroma{
+  .pf-name.rgb-ocean,.pf-name.rgb-miami,.pf-name.rgb-toxic,.pf-name.rgb-chroma,
+  .pf-name.rgb-prism{
     font-size:24px !important;
   }
 }

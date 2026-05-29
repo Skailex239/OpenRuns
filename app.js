@@ -1004,7 +1004,8 @@ function renderGlobal(){
       const isNewSkinType = ['cyberpunk','sunset','aurore','pastel','gold','volcano','ocean','miami','toxic','chroma','prism'].includes(rewardType);
       const cosmeticClass = isVip ? ` is-${rewardType}` : '';
       const cosmeticNameClass = isVip ? (isNewSkinType ? ` rgb-${rewardType}` : ` player-${rewardType}`) : '';
-      return '<tr class="'+isMeClass+cosmeticClass+'"><td class="global-rank '+rc+'">'+(i+1)+'</td><td class="global-player'+cosmeticNameClass+'" onclick="showPlayer(\''+esc(p.player)+'\')">'+p.player+'</td><td class="global-points">'+p.points+'</td><td class="global-wins">'+p.wins+'</td></tr>';
+      const playerInner = isNewSkinType ? '<span class="global-player'+cosmeticNameClass+'" onclick="showPlayer(\''+esc(p.player)+'\')">'+p.player+'</span>' : '<span class="global-player'+cosmeticNameClass+'" onclick="showPlayer(\''+esc(p.player)+'\')">'+p.player+'</span>';
+      return '<tr class="'+isMeClass+cosmeticClass+'"><td class="global-rank '+rc+'">'+(i+1)+'</td><td class="global-player-cell" onclick="showPlayer(\''+esc(p.player)+'\')">'+playerInner+'</td><td class="global-points">'+p.points+'</td><td class="global-wins">'+p.wins+'</td></tr>';
     }).join("")+'</tbody></table>';
 }
 function renderHof(){
