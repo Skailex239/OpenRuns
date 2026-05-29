@@ -457,10 +457,43 @@ async function refreshProfile() {
     }
   }
 
+  // ── Publier les aliases dans public-aliases pour que TOUS les viewers voient la fusion ──
+  await publishPublicAliases(apiSessions);
+
   // Render everything — on utilise les sessions API (tous modes, avec hasWon)
   renderStatsRow(sessions);
   renderMonthlyChart(sessions);
   renderRecentGames(sessions);
+}
+
+/**
+ * Publie les aliases du joueur dans la collection publique Firestore "public-aliases".
+ * Cela permet à TOUS les viewers (même non connectés) de voir les pseudos fusionnés.
+ */
+async function publishPublicAliases(sessions) {
+  if (!currentUser?.publicId || !currentUser.uid) return;
+
+  const aliases = [...new Set([
+    currentUser.name,
+    ...sessions.map(s => s.username).filter(Boolean),
+  ])];
+
+  const clientIds = [...new Set(sessions.map(s => s.clientId).filter(Boolean))];
+
+  if (aliases.length <= 1 && clientIds.length === 0) return; // Rien à fusionner
+
+  try {
+    await setDoc(doc(db, "public-aliases", currentUser.publicId), {
+      username: currentUser.name,
+      publicId: currentUser.publicId,
+      aliases: aliases,
+      clientIds: clientIds,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    console.log(`[profile] ${aliases.length} aliases publiés dans public-aliases`);
+  } catch (e) {
+    console.warn("[profile] Erreur publication public-aliases:", e);
+  }
 }
 
 /* ── Reward code system (multi-cosmetic) ── */

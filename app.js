@@ -232,6 +232,55 @@ async function loadVipPlayers() {
   }
 }
 
+// ====== PUBLIC ALIASES — Fusion pour TOUS les viewers ======
+// Charge la collection public-aliases (écrite par profile.js quand un user se connecte)
+// et enrichit aliasMap pour que la fusion de pseudos soit visible par tout le monde
+let publicAliasesLoaded = false;
+function loadPublicAliases() {
+  try {
+    onSnapshot(collection(db, "public-aliases"), (snap) => {
+      let changed = false;
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (!data.username || !data.aliases || data.aliases.length <= 1) return;
+
+        // Créer ou fusionner l'entrée dans aliasMap
+        const pid = '__public_alias__' + docSnap.id;
+        const existing = aliasMap[pid];
+        const newAliases = data.aliases || [];
+
+        // Aussi inclure les clientIds comme aliases potentiels
+        if (data.clientIds) {
+          data.clientIds.forEach(cid => {
+            if (cid && !newAliases.includes(cid)) {
+              // Mapper les clientIds vers cette même entrée
+              if (aliasMap[cid] && aliasMap[cid].name !== data.username) {
+                aliasMap[cid] = { name: data.username, aliases: aliasMap[cid].aliases || [] };
+              } else if (!aliasMap[cid]) {
+                aliasMap[cid] = { name: data.username, aliases: [] };
+              }
+            }
+          });
+        }
+
+        aliasMap[pid] = { name: data.username, aliases: newAliases };
+        changed = true;
+      });
+
+      if (changed && allRuns.length > 0) {
+        console.log('[app] 🔀 Public aliases mises à jour — re-traitement');
+        processData();
+        renderAll();
+      }
+      publicAliasesLoaded = true;
+    }, (error) => {
+      console.warn("[app] Firestore public-aliases listener error (non-critique):", error.message);
+    });
+  } catch (e) {
+    console.warn("[app] Erreur chargement public-aliases:", e);
+  }
+}
+
 function showProfileModal() {
   document.getElementById('profile-modal').classList.add('active');
 }
@@ -1111,6 +1160,7 @@ const tabParam=urlParams.get('tab');
 redirectToProfileIfRequested();
 loadData().then(()=>{
   loadVipPlayers(); // Charger les joueurs VIP en parallèle
+  loadPublicAliases(); // Charger les aliases publics pour fusion visible par tous
   if(mapParam)selectMap(mapParam);
   if (tabParam === 'profile') {
     window.location.replace('profile.html');
